@@ -1,0 +1,365 @@
+;; Verified public-register citations for the legal entity archived by this repository.
+;;
+;; Every row is checked live by tools/verify_citations.cljs:
+;;   * GET :cite/url must answer HTTP 2xx
+;;   * :cite/expect-substring must appear in the response body
+;;
+;; A URL that cannot be fetched, or whose body no longer carries the claim, is a
+;; DRIFT and fails the gate. Nothing is recorded here that was not retrieved.
+;;
+;; FOUR independent authorities are cited, not one:
+;;   * GLEIF, the global LEI system
+;;   * the United Kingdom, via Companies House -- and unlike the Delaware
+;;     register in the Nasdaq, Inc. catalog (549300L8X1Q78ERXFD06), the register
+;;     of record here answers a stable per-entity GET URL, so the register GLEIF
+;;     names as both register of record and validation authority (RA000585,
+;;     company 05722669) IS cited directly (rows ch-*). :catalog/unreachable is
+;;     empty for that reason, not because nothing was tried.
+;;   * the United States, via the SEC's EDGAR submissions API (Endava plc is a
+;;     foreign private issuer, ticker DAVA on the NYSE, CIK 0001656081)
+;;   * the issuer itself, at its own published website www.endava.com -- the
+;;     terms page this repository archives (80-data/public/tos.journal.edn
+;;     archives https://www.endava.com/terms-and-conditions, the same URL the
+;;     issuer-* rows cite)
+;;
+;; THE ADDRESS IS ONE FACT VISIBLE FROM ALL FOUR AUTHORITIES. GLEIF's legal AND
+;; headquarters address, Companies House's registered office, the SEC's business
+;; address and the issuer's own printed registered office are all
+;; 125 Old Broad Street, London, EC2N 1AR (rows gleif-address, ch-address,
+;; sec-street, issuer-registered-office). The Nasdaq catalog needed a paragraph
+;; to explain why its two addresses differ; this one needs a sentence to say
+;; they do not.
+;;
+;; THREE HONEST WRINKLES, SO A READER DOES NOT MISREAD THEM AS DRIFT:
+;;   1. The issuer's own terms print the company number WITHOUT the leading
+;;      zero -- 'Registered in England number: 5722669' -- while GLEIF and
+;;      Companies House both print 05722669 (rows gleif-registered-as,
+;;      gleif-validated-as, gleif-ocid vs issuer-registered-number). Same
+;;      number, two spellings; each row matches its own source's bytes.
+;;   2. The SEC submissions record carries "lei":null (row sec-lei-null): the
+;;      SEC does NOT corroborate the LEI string itself. The GLEIF<->SEC join in
+;;      this catalog rests on legal name + United Kingdom incorporation +
+;;      the shared street address + ticker (rows sec-name, sec-state-incorp,
+;;      sec-street, sec-ticker), not a shared identifier.
+;;   3. GLEIF and Companies House print the legal name upper-case (ENDAVA PLC);
+;;      the SEC and the issuer print 'Endava plc'. Case conventions per source,
+;;      not four names.
+;;
+;; ONE STRUCTURAL FACT WORTH READING TWICE: the entity was created 2006-02-27
+;; (rows gleif-entity-creation, ch-incorporated -- the two authorities agree to
+;; the day), but the LEI was first registered 2014-01-09 (row
+;; gleif-initial-registration), while the entity still bore its previous legal
+;; name ENDAVA LIMITED (rows gleif-previous-name, ch-previous-name). The LEI is
+;; eight years younger than the company it identifies, and today it is managed
+;; by EQS Group GmbH, marketing name 'EQS' (rows gleif-managing-lou,
+;; gleif-lou-name, gleif-lou-marketing). The catalog cites what GLEIF answers
+;; today and claims nothing about earlier managing LOUs.
+;;
+;; Substrings are taken from the RAW response body and were each checked against
+;; the fetched bytes before this file was written (2026-08-22, GLEIF golden copy
+;; of 2026-08-21). GLEIF escapes URL slashes in its JSON (gb\/05722669); the
+;; ocid row matches that raw escaped form deliberately. Companies House prints
+;; the word 'Active' exactly once on the cited page -- the company-status field
+;; -- so the body-wide substring match of row ch-status is anchored in fact,
+;; and that count was measured, not assumed (2026-08-22).
+{:catalog/subject
+ #:company{:legal-name "ENDAVA PLC"
+           :lei "213800JJ6CRPCWCQVZ25"
+           :jurisdiction "GB"
+           :registered-at "RA000585"
+           :registered-as "05722669"
+           :legal-form "B6ES"
+           :website "https://www.endava.com"}
+ :catalog/authorities
+ [{:authority/id :gleif
+   :authority/name "Global Legal Entity Identifier Foundation"
+   :authority/root "https://api.gleif.org/"}
+  {:authority/id :uk-companies-house
+   :authority/name "Companies House, the United Kingdom companies register (RA000585, register of record and validation authority)"
+   :authority/root "https://find-and-update.company-information.service.gov.uk/"}
+  {:authority/id :us-sec
+   :authority/name "U.S. Securities and Exchange Commission, EDGAR"
+   :authority/root "https://data.sec.gov/"}
+  {:authority/id :issuer
+   :authority/name "Endava plc, at its own published website"
+   :authority/root "https://www.endava.com/"}]
+ :catalog/unreachable
+ []
+ :catalog/entries
+ [
+  {:cite/id "gleif-lei"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"lei\":\"213800JJ6CRPCWCQVZ25\""
+   :cite/claim "GLEIF issues LEI 213800JJ6CRPCWCQVZ25."}
+  {:cite/id "gleif-legal-name"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"legalName\":{\"name\":\"ENDAVA PLC\",\"language\":\"en\"}"
+   :cite/claim "The legal name on that LEI is ENDAVA PLC, recorded in English. Corroborated independently by ch-name, sec-name and issuer-name (case conventions differ per source; header wrinkle 3)."}
+  {:cite/id "gleif-previous-name"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "{\"name\":\"ENDAVA LIMITED\",\"language\":\"en\",\"type\":\"PREVIOUS_LEGAL_NAME\"}"
+   :cite/claim "GLEIF records the previous legal name ENDAVA LIMITED. Corroborated independently by ch-previous-name."}
+  {:cite/id "gleif-address"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"addressLines\":[\"125 OLD BROAD STREET\"]"
+   :cite/claim "The legal address is 125 Old Broad Street -- and GLEIF records the SAME address as headquarters. All four authorities print this street (rows ch-address, sec-street, issuer-registered-office; see header)."}
+  {:cite/id "gleif-city"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"city\":\"LONDON\""
+   :cite/claim "The legal seat city is London."}
+  {:cite/id "gleif-postal"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"postalCode\":\"EC2N 1AR\""
+   :cite/claim "The legal seat postcode is EC2N 1AR. Corroborated by ch-address, sec-zip and issuer-registered-office."}
+  {:cite/id "gleif-jurisdiction"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"jurisdiction\":\"GB\""
+   :cite/claim "The jurisdiction is GB. Corroborated by the SEC's independent record of United Kingdom incorporation (rows sec-state-incorp, sec-state-incorp-desc)."}
+  {:cite/id "gleif-legal-form"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"legalForm\":{\"id\":\"B6ES\""
+   :cite/claim "The legal form is ELF code B6ES. Resolved to 'Public Limited Company' by the gleif-elf-* definition rows and corroborated by the register's own words (row ch-legal-form)."}
+  {:cite/id "gleif-registered-at"
+   :cite/authority :gleif
+   :cite/row-kind :registration
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"registeredAt\":{\"id\":\"RA000585\""
+   :cite/claim "The register of record is RA000585. Resolved to Companies House by the gleif-ra-* definition rows, and -- unlike the Delaware register in the Nasdaq catalog -- cited directly (rows ch-*)."}
+  {:cite/id "gleif-registered-as"
+   :cite/authority :gleif
+   :cite/row-kind :registration
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"registeredAs\":\"05722669\""
+   :cite/claim "The register's file number is 05722669 -- the Companies House company number, and the number in the cited register URL itself. The issuer prints it without the leading zero (row issuer-registered-number; header wrinkle 1)."}
+  {:cite/id "gleif-entity-status"
+   :cite/authority :gleif
+   :cite/row-kind :status
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"status\":\"ACTIVE\""
+   :cite/claim "The entity status is ACTIVE. Corroborated by the register's company-status field (row ch-status)."}
+  {:cite/id "gleif-entity-creation"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"creationDate\":\"2006-02-27T00:00:00Z\""
+   :cite/claim "The entity was created 2006-02-27. The register agrees to the day (row ch-incorporated) -- and the LEI is eight years younger (row gleif-initial-registration; see header)."}
+  {:cite/id "gleif-registration-status"
+   :cite/authority :gleif
+   :cite/row-kind :registration
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"status\":\"ISSUED\""
+   :cite/claim "The LEI registration status is ISSUED (this substring sits in the registration block; the entity block's status is matched separately by gleif-entity-status)."}
+  {:cite/id "gleif-initial-registration"
+   :cite/authority :gleif
+   :cite/row-kind :registration
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"initialRegistrationDate\":\"2014-01-09T00:00:00Z\""
+   :cite/claim "The LEI was first registered 2014-01-09, eight years after the entity's creation (row gleif-entity-creation), while the entity still bore its previous legal name (row gleif-previous-name)."}
+  {:cite/id "gleif-next-renewal"
+   :cite/authority :gleif
+   :cite/row-kind :registration
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"nextRenewalDate\":\"2027-06-14T00:00:48Z\""
+   :cite/claim "The next renewal falls due 2027-06-14. This row WILL drift at renewal -- that is the point: a lapsed or renewed record should turn this catalog red so the change is read, not missed."}
+  {:cite/id "gleif-corroboration"
+   :cite/authority :gleif
+   :cite/row-kind :registration
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"corroborationLevel\":\"FULLY_CORROBORATED\""
+   :cite/claim "GLEIF states the record is FULLY_CORROBORATED -- the register itself confirmed the data. The catalog still cites that register directly rather than resting on GLEIF's word for it (rows ch-*)."}
+  {:cite/id "gleif-validated-at"
+   :cite/authority :gleif
+   :cite/row-kind :registration
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"validatedAt\":{\"id\":\"RA000585\""
+   :cite/claim "The validation authority is the same register, RA000585 -- register of record and validation authority coincide for this entity."}
+  {:cite/id "gleif-validated-as"
+   :cite/authority :gleif
+   :cite/row-kind :registration
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"validatedAs\":\"05722669\""
+   :cite/claim "GLEIF records the file number a second time as validatedAs, and a third time inside the OpenCorporates id (row gleif-ocid)."}
+  {:cite/id "gleif-managing-lou"
+   :cite/authority :gleif
+   :cite/row-kind :registration
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"managingLou\":\"529900F6BNUR3RJ2WH29\""
+   :cite/claim "The managing LOU is 529900F6BNUR3RJ2WH29. Resolved to EQS Group GmbH by rows gleif-lou-name and gleif-lou-marketing; the catalog claims nothing about earlier managing LOUs (see header)."}
+  {:cite/id "gleif-ocid"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25"
+   :cite/expect-substring "\"ocid\":\"gb\\/05722669\""
+   :cite/claim "The OpenCorporates id is gb/05722669 -- jurisdiction and file number again. Raw escaped form (gb\\/) matched deliberately."}
+  {:cite/id "gleif-ra-org"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/registration-authorities/RA000585"
+   :cite/expect-substring "\"internationalOrganizationName\":\"Companies House\""
+   :cite/claim "RA000585 resolves to Companies House -- the organisation behind the register cited directly in the ch-* rows."}
+  {:cite/id "gleif-ra-jurisdiction"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/registration-authorities/RA000585"
+   :cite/expect-substring "\"jurisdiction\":\"England and Wales\""
+   :cite/claim "RA000585's register jurisdiction is England and Wales."}
+  {:cite/id "gleif-elf-name"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/entity-legal-forms/B6ES"
+   :cite/expect-substring "\"localName\":\"Public Limited Company\""
+   :cite/claim "ELF code B6ES resolves to Public Limited Company -- the 'plc' in the legal name, in the register's own words (row ch-legal-form)."}
+  {:cite/id "gleif-elf-country"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/entity-legal-forms/B6ES"
+   :cite/expect-substring "\"countryCode\":\"GB\""
+   :cite/claim "B6ES is a United Kingdom legal form, matching the entity's GB jurisdiction (row gleif-jurisdiction)."}
+  {:cite/id "gleif-lou-name"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25/lei-issuer"
+   :cite/expect-substring "\"name\":\"EQS Group GmbH\""
+   :cite/claim "The managing LOU 529900F6BNUR3RJ2WH29 resolves to EQS Group GmbH."}
+  {:cite/id "gleif-lou-marketing"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/lei-records/213800JJ6CRPCWCQVZ25/lei-issuer"
+   :cite/expect-substring "\"marketingName\":\"EQS\""
+   :cite/claim "GLEIF accredits that LOU under the marketing name EQS."}
+  {:cite/id "ch-name"
+   :cite/authority :uk-companies-house
+   :cite/row-kind :identity
+   :cite/url "https://find-and-update.company-information.service.gov.uk/company/05722669"
+   :cite/expect-substring "ENDAVA PLC overview"
+   :cite/claim "The register of record itself answers a per-entity GET for company 05722669 and titles the page ENDAVA PLC. This is the URL the Delaware register could not offer the Nasdaq catalog (see header)."}
+  {:cite/id "ch-address"
+   :cite/authority :uk-companies-house
+   :cite/row-kind :identity
+   :cite/url "https://find-and-update.company-information.service.gov.uk/company/05722669"
+   :cite/expect-substring "125 Old Broad Street, London, EC2N 1AR"
+   :cite/claim "The registered office on the register is 125 Old Broad Street, London, EC2N 1AR -- the same address all three other authorities print (see header)."}
+  {:cite/id "ch-status"
+   :cite/authority :uk-companies-house
+   :cite/row-kind :status
+   :cite/url "https://find-and-update.company-information.service.gov.uk/company/05722669"
+   :cite/expect-substring "Active"
+   :cite/claim "The register prints company status Active. The substring match is body-wide, but the word Active appears exactly once on this page -- the company-status field -- and that count was measured before this row was written (2026-08-22; see header)."}
+  {:cite/id "ch-incorporated"
+   :cite/authority :uk-companies-house
+   :cite/row-kind :attribute
+   :cite/url "https://find-and-update.company-information.service.gov.uk/company/05722669"
+   :cite/expect-substring "27 February 2006"
+   :cite/claim "The register dates incorporation 27 February 2006 -- agreeing with GLEIF's creationDate to the day (row gleif-entity-creation)."}
+  {:cite/id "ch-legal-form"
+   :cite/authority :uk-companies-house
+   :cite/row-kind :attribute
+   :cite/url "https://find-and-update.company-information.service.gov.uk/company/05722669"
+   :cite/expect-substring "Public limited Company"
+   :cite/claim "The register's company type is Public limited Company (the register's own capitalisation), corroborating ELF code B6ES (rows gleif-legal-form, gleif-elf-name)."}
+  {:cite/id "ch-previous-name"
+   :cite/authority :uk-companies-house
+   :cite/row-kind :attribute
+   :cite/url "https://find-and-update.company-information.service.gov.uk/company/05722669"
+   :cite/expect-substring "ENDAVA LIMITED"
+   :cite/claim "The register lists the previous name ENDAVA LIMITED, corroborating GLEIF's PREVIOUS_LEGAL_NAME row (gleif-previous-name)."}
+  {:cite/id "ch-sic"
+   :cite/authority :uk-companies-house
+   :cite/row-kind :attribute
+   :cite/url "https://find-and-update.company-information.service.gov.uk/company/05722669"
+   :cite/expect-substring "62020 - Information technology consultancy activities"
+   :cite/claim "The register classifies the business under UK SIC 62020, information technology consultancy -- the same trade the SEC files under its own taxonomy (row sec-sic)."}
+  {:cite/id "sec-cik"
+   :cite/authority :us-sec
+   :cite/row-kind :identity
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"cik\":\"0001656081\""
+   :cite/claim "The SEC files this entity under CIK 0001656081 -- the number in the cited URL itself."}
+  {:cite/id "sec-name"
+   :cite/authority :us-sec
+   :cite/row-kind :identity
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"name\":\"Endava plc\""
+   :cite/claim "The SEC's registrant name is Endava plc (the SEC's case; header wrinkle 3). Corroborates gleif-legal-name without consulting GLEIF."}
+  {:cite/id "sec-ticker"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"tickers\":[\"DAVA\"]"
+   :cite/claim "The SEC records the ticker DAVA."}
+  {:cite/id "sec-exchange"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"exchanges\":[\"NYSE\"]"
+   :cite/claim "DAVA trades on the NYSE -- a UK plc listed in New York, which is why a US authority holds an independent record of this British company at all."}
+  {:cite/id "sec-state-incorp"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"stateOfIncorporation\":\"X0\""
+   :cite/claim "The SEC's incorporation code is X0 -- EDGAR's code for the United Kingdom, resolved in the same body by row sec-state-incorp-desc."}
+  {:cite/id "sec-state-incorp-desc"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"stateOfIncorporationDescription\":\"United Kingdom\""
+   :cite/claim "The SEC spells the incorporation out as United Kingdom, corroborating GLEIF's GB jurisdiction (row gleif-jurisdiction). The SEC and GLEIF never consulted each other."}
+  {:cite/id "sec-street"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"street1\":\"125 OLD BROAD STREET\""
+   :cite/claim "The SEC's business address is 125 Old Broad Street -- the same street GLEIF, the register and the issuer print. Unlike the Nasdaq record, legal seat and operating address coincide here (see header)."}
+  {:cite/id "sec-zip"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"zipCode\":\"EC2N 1AR\""
+   :cite/claim "The SEC records the London postcode EC2N 1AR in its zipCode field."}
+  {:cite/id "sec-lei-null"
+   :cite/authority :us-sec
+   :cite/row-kind :wrinkle
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"lei\":null"
+   :cite/claim "The SEC record carries lei:null -- the SEC does NOT corroborate the LEI string. The GLEIF<->SEC join rests on name, UK incorporation, address and ticker (header wrinkle 2)."}
+  {:cite/id "sec-sic"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0001656081.json"
+   :cite/expect-substring "\"sicDescription\":\"Services-Computer Programming Services\""
+   :cite/claim "The SEC classifies the business as computer programming services -- the same trade the UK register files as SIC 62020 (row ch-sic), under two taxonomies that never consulted each other."}
+  {:cite/id "issuer-name"
+   :cite/authority :issuer
+   :cite/row-kind :identity
+   :cite/url "https://www.endava.com/terms-and-conditions"
+   :cite/expect-substring "Endava plc"
+   :cite/claim "The issuer names Endava plc on its own terms page -- the page 80-data/public/tos.journal.edn archives."}
+  {:cite/id "issuer-registered-office"
+   :cite/authority :issuer
+   :cite/row-kind :attribute
+   :cite/url "https://www.endava.com/terms-and-conditions"
+   :cite/expect-substring "125 Old Broad Street, London, EC2N 1AR"
+   :cite/claim "The issuer prints its registered office as 125 Old Broad Street, London, EC2N 1AR -- the fourth independent appearance of the one address (see header)."}
+  {:cite/id "issuer-registered-number"
+   :cite/authority :issuer
+   :cite/row-kind :attribute
+   :cite/url "https://www.endava.com/terms-and-conditions"
+   :cite/expect-substring "Registered in England number: 5722669"
+   :cite/claim "The issuer prints its company number as 5722669 -- without the leading zero GLEIF and the register both keep (header wrinkle 1). Same number, the issuer's own spelling."}]}
